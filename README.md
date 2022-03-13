@@ -1,0 +1,3 @@
+- 👋 Hi, I’m @AsliAydin
+- 👀 I’m interested in ...
+-MsSQL, C#, T-SQL, Database Management
