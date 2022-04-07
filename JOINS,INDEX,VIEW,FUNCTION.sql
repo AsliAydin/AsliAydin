@@ -1,3 +1,6 @@
+SAMPLE NORTHWND
+
+
 --INNER JOIN----
 
 -- From Suppliers table CompanyName,ContactName
