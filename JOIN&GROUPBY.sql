@@ -1,4 +1,4 @@
-AdventureWorks2008R2
+Sample AdventureWorks2008R2
 
 
 
