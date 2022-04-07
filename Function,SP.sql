@@ -1,15 +1,6 @@
 ---FUNCTION--------
 
-/*
-	Tablo Döndüren Fonksiyonlar
-	*Skaler fonksiyonlar gibi dýþarýdan parametre alabilirler.
-	*Begin - End kullanýlmaz
-	*Fonksiyon kullanýmýnda þema ismi kullanmaya gerek yoktur.
-*/
-
---Id girilerek çalýþan bilgilerini getiren function yaz.
-
-CREATE FUNCTION CalisanBilgileriniGetir
+CREATE FUNCTION BringEmployeesInformation
 (
 @employeeID int
 )
@@ -22,12 +13,12 @@ RETURN SELECT *
 
 
 
-SELECT * FROM [CalisanBilgileriniGetir](5)
+SELECT * FROM [BringEmployeesInformation](5)
 
 
---Ms,Mrs gibi ünvan girilerek çalýþan bilgilerini getiren function yaz.
+--Write a function that returns employee information by entering a title such as Ms, Mrs.
 
-ALTER FUNCTION CalisanlariUnvanaGoreGetir
+ALTER FUNCTION BringEmployeesbyTitleOfCourtesy
 (@unvan1 nvarchar(25),@unvan2 nvarchar(25))
 
 RETURNS TABLE
@@ -35,22 +26,22 @@ RETURN SELECT *
        FROM Employees
 	   WHERE TitleOfCourtesy IN (@unvan1,@unvan2)
 
-SELECT FirstName,LastName,TitleOfCourtesy FROM [dbo].[CalisanlariUnvanaGoreGetir]('Ms.')
+SELECT FirstName,LastName,TitleOfCourtesy FROM [dbo].[BringEmployeesbyTitleOfCourtesyr]('Ms.')
 
 
---Baþ harf girilerek buna göre FirstName kolonu kullanýlarak çalýþanlar getirilecek.
+--Employees will be brought in by entering the initials and using the FirstName column accordingly.
 
-CREATE FUNCTION BasHarfeGoreGetir
-(@basHarf NVARCHAR(1))
+CREATE FUNCTION FetchbyInitials
+(@Initials NVARCHAR(1))
 
 RETURNS TABLE
 RETURN SELECT *
        FROM Employees
-	   WHERE LEFT(FirstName,1)=@basHarf
-	   --WHERE FirstName LIKE @basHarf+'%'
+	   WHERE LEFT(FirstName,1)=@Initials
+	   --WHERE FirstName LIKE @Initials+'%'
 
 SELECT *
-FROM [dbo].[BasHarfeGoreGetir]('A')
+FROM [dbo].[FetchbyInitials]('A')
 
 
 
@@ -59,36 +50,9 @@ SELECT * FROM Employees
 
 
 /*
--------STORED PROCEDURE (Saklý Yordamlar)---------
+-------STORED PROCEDURE---------
 
-TSQL komularý ile hazýrladýðýmýz iþlemler bütünün çalýþtýrýlma anýnda derlenmesi ile size bir sonu üreten sql server birleþenidir.Sýk kullanýlan sql komutlarýmýzý (select,insert,update,delete) store procedure içerisinde kullanýrsak bir sonraki aþamada sadece çaðýrýrýz.
-Proglama dilinde METHOD ve Sql Serverdaki User Defined Funculara benzerler.
-
-Store Procedurlar;
-1.Performans ve güvenlik objeleridir.
-2.Tablolardan sonraki en önemli veritabaný objesidir.
-3.Input ve Output parametre tipleri vardýr.
-4.Geriye birden fazla deðer döndürebilir.(Output parametre)
-
-NOT:Birden fazla dönüþ tipi output parametere ile yapýlýr.SP'lerin dönüþ tipleri her zaman INT olarak tanýmlanmýþtýr.
-NOT2: Veritabaný objeleri arasýnda en hýzlý çalýþan ve güvenli eriþim saðlayan iþlemlerden biridir.
-
---FUNTION (UDF) & PROCEDURE ARASINDAKÝ FARKLILIKLAR
-
-FUNTION
-1.Funtion deðer döndürmek zorundadýr.
-2.Input parametre tanýmlanýrken,output parametreleri destelemez.
-3.Select ifadeleri (Sorgu içerisinde) ile çaðrýlýr.
-
-PROCEDURE
-1.Deðer döndürmek zorunda deðillerdir.
-2.Input parametre tanýmaliblirken, output parametreler desteklenir.
-3.Select ifadeleri içerisinde çalýþtýrýlamazlar,Procedure çaðýrmak için exec veya execute komutu kullanýlmalýdýr.
-*/
-
---calisan bilgileirni getiren sp yaz.
-
-CREATE PROCEDURE sp_CalisanlariGetir
+CREATE PROCEDURE sp_BringEmployees
 AS
       BEGIN
 
@@ -98,13 +62,11 @@ AS
 
 	  END
 
-SELECT * FROM sp_CalisanlariGetir--Yanlýþ bir tanýlamadýr.Execute ile çalýþtýrýlýr.1
+EXECUTE sp_BringEmployees
 
-EXECUTE sp_CalisanlariGetir
+--Write Store Procedure, which brings all categories and products belonging to these categories.
 
---Tüm kategorilerle bu kategorilere ait ürünleri getiren Store Procedure.
-
-CREATE PROCEDURE sp_UrunlerVeKategoriler
+CREATE PROCEDURE sp_ProductsandCategories
 AS
     BEGIN
 
@@ -114,17 +76,15 @@ AS
 
 	END
 
-EXEC sp_UrunlerVeKategoriler
---view olarak aynýsýný evet yaparsýn ama bu daha hýzlý ve güvenli. Alt yapýsýnda indexleme var. view da parametre alamazsýn, @sayi int gibi. sp de olur. yani dýþarýdan parametre girebilirim splerde.
+EXEC sp_ProductsandCategories
 
 
+--Write the store procedure that brings the products by category.
+--(you will enter parameters from outside, so you will write category id and query)( Input: valid when data entry.)
 
---Kategorisine göre ürünleri getiren store procedur yazýnýz. 
---(dýþarýdan parametre gireceksin yani category id yazýp sorgulayacaksýn)( Input: veri giriþi olunca geçelidir.)
 
-
-CREATE PROCEDURE sp_UrunByKategori
-@id INT--Procedure'e parametre aktaryoruz.Parametreler yazýlýrken, önce parametre adý (baþýnda @ iþareti ile birlikte) daha sonra ise parametrenin tipi yazýlýr.
+CREATE PROCEDURE sp_ProductByCategory
+@id INT
 
 AS
    BEGIN 
@@ -136,14 +96,14 @@ AS
 
    END
 
-exec sp_UrunByKategori 1
+exec sp_ProductByCategory 1
 
-exec sp_UrunByKategori @id=1
+exec sp_ProductByCategory @id=1
 
 
---Çalýþanýn adýna göre arama yapýp listeleyen SP.
+--Searching and listing by employee's name SP.
 
-CREATE PROCEDURE sp_CalisaninAdinaGoreGetir
+CREATE PROCEDURE sp_BringByYourEmployeesName
 @ad nvarchar(10)
 AS
 
@@ -156,12 +116,12 @@ AS
    END
 
 
-EXEC sp_CalisaninAdinaGoreGetir 'a'
+EXEC sp_BringByYourEmployeesName 'a'
 
 
---Adýna ve soyadýna göre çalýþanla1rý listeleyen SP
+--Write SP that lists employees by first and last name
 
-CREATE PROCEDURE sp_Calisanlar
+CREATE PROCEDURE sp_Employees
   @ad NVARCHAR(10),
   @soyad NVARCHAR(20)
 
@@ -177,15 +137,15 @@ AS
    END
 
 
-EXECUTE sp_Calisanlar 'Nancy','Davolio'
+EXECUTE sp_Employees 'Nancy','Davolio'
 
-EXECUTE sp_Calisanlar 'Davolio','Nancy'
+EXECUTE sp_Employees 'Davolio','Nancy'
 
-EXECUTE sp_Calisanlar @soyad='Davolio',@ad='Nancy'
+EXECUTE sp_Employees @soyad='Davolio',@ad='Nancy'
 
 
---Procedure deðiþikliði yapýldý.
-ALTER PROCEDURE sp_Calisanlar
+--Changing Procedure
+ALTER PROCEDURE sp_Employees
   @ad NVARCHAR(10),
   @soyad NVARCHAR(20)
 
@@ -200,18 +160,16 @@ AS
 
    END
 
---Procedure silme iþlemini
+--Dropping Procedure
 
-DROP PROCEDURE sp_Calisanlar
+DROP PROCEDURE sp_Employees
 
-
--- Customers tablosuna INSERT iþlemi yapan STORED PROCEDURE  ama tüm veriler dýþarýdan girilecek.
+-- Write SP that INSERT to the Customers table, but all data will be entered externally.
 
 ALTER PROCEDURE sp_InsertCustomer
        @customerID NCHAR(5),
 	   @companyName NVARCHAR(40),
-	   @contactName NVARCHAR(30)='Belirtilmedi',--Default deðer atanan sütunlar için Proceduren kullanýmý esnasýnda bir deðer belirtilmediyse otomatik olarak Belirtilmedi yazacak ancak deðer giriþi saðlandýysa son girelen deðeri yazacaktýr.
-	   @contactTitle NVARCHAR(30)='Belirtilmedi',
+	   @contactName NVARCHAR(30)='Belirtilmedi',
 	   @address NVARCHAR(60)='Belirtilmedi',
 	   @city NVARCHAR(15)='Belirtilmedi',
 	   @region NVARCHAR(15)='Belirtilmedi',
@@ -227,22 +185,21 @@ AS
 
 	 END
 
-	 EXEC sp_InsertCustomer 'ALPYN','ALPYN HOLDÝNG'
+	 EXEC sp_InsertCustomer 'ALPYN','ALPYN HOLDÄ°NG'
 
-	 EXEC sp_InsertCustomer @customerID='ALMNY',@companyName='ALMN HOLDÝN',@phone='123456789'
+	 EXEC sp_InsertCustomer @customerID='ALMNY',@companyName='ALMN HOLDÄ°N',@phone='123456789'
 
 	 SELECT * FROM Customers WHERE CustomerID='ALMNY'
-
 
 
 	 SELECT * FROM Customers WHERE [CustomerID]='ALPYN'
 
 	------STORED PROCEDURE-------
 
----Kullanýcýnýn belirttiði kategoriyi eðer kategoriler tablosunda yok ise ekleyen var ise kategori adýna göre 
---açýklama alanýný güncelleyen SP.
+---Write SP that updates the description field, if the category specified by the user is not in the categories table, if there is someone who adds it, according to the
+category name.
 
-CREATE PROCEDURE sp_KategoriEkle
+CREATE PROCEDURE sp_AddCategory
     @categoryName NVARCHAR(15),
 	@description NTEXT
 AS
@@ -251,15 +208,12 @@ AS
 
    IF EXISTS(SELECT * FROM Categories WHERE CategoryName=@categoryName)
       BEGIN
-	  --//Bulduðunda
 	         UPDATE Categories SET [Description]=@description WHERE  CategoryName=@categoryName
 
-			 PRINT 'Bu kategori daha önceden eklenmiþtir.Kategoriye ait açýklama bilgisi güncellenmiþtir.'
+			 PRINT 'This category has been added before. The description information of the category has been updated.'
 	  END
    ELSE
       BEGIN
-	  --//Bulamadýðýnda
-
 	          INSERT INTO Categories(CategoryName,[Description]) VALUES (@categoryName,@description)
 
 	  END
@@ -267,76 +221,68 @@ AS
   END
 
  
- EXEC sp_KategoriEkle 'þaraplar','üzümden yapýlýr.'
+ EXEC sp_AddCategory 'wine','made from grapes.'
 
 
  SELECT * FROM Categories
 
  
- EXEC sp_KategoriEkle 'þaraplar','En ucuzu köpek öldürendir.'
+ EXEC sp_AddCategory 'wine','France tops the chart as the best wine producing country.'
 
 
 
- --Girilen 3 tane sayýnýn toplamýný bulan SP.
+ --Write SP to find the sum of 3 entered numbers
 
-CREATE PROCEDURE sp_SayilariTopla
-       @sayi1 INT,
-	   @sayi2 INT,
-	   @sayi3 INT
+CREATE PROCEDURE sp_SumNumbers
+       @number1 INT,
+	   @number2 INT,
+	   @number3 INT
 AS
        BEGIN
 
-	         DECLARE @toplam INT
+	         DECLARE @sum INT
 
-			 set @toplam=@sayi1+@sayi2+@sayi3
+			 set @sum=@number1+@number2+@number3
 
-			 RETURN @toplam
+			 RETURN @sum
 
 	   END
 
---ÇALIÞTIRMAK 
-DECLARE @sonuc INT
 
-EXEC @sonuc= sp_SayilariTopla 1,2,4
+DECLARE @result INT
 
-PRINT 'Sonuç:'+CAST(@sonuc AS NVARCHAR)
+EXEC @result= sp_SumNumbers 1,2,4
+
+PRINT 'result:'+CAST(@result AS NVARCHAR)
 
 
---Girilen 3 sayýnýn toplamýný ve ayný sayýlarýn ortalamasýný birlikte gösteriniz.
+--Find the sum and the average of three numbers
 
-ALTER PROCEDURE sp_ToplaVeOrtala
-   @sayi1 INT,
-   @sayi2 INT,
-   @sayi3 INT,
-   @ortalama DECIMAL(18,2) OUTPUT
+CREATE PROCEDURE sp_SumandAverage
+   @number1 INT,
+   @number2 INT,
+   @number3 INT,
+   @average DECIMAL(18,2) OUTPUT
 AS
    BEGIN 
-        DECLARE @toplam INT
+        DECLARE @sum INT
         
-        SELECT @toplam=@sayi1+@sayi2+@sayi3
+        SELECT @sum=@number1+@number2+@number3
         
-        SELECT @ortalama=@toplam/3.0
+        SELECT @average=@sum/3.0
         
-        RETURN @toplam
+        RETURN @sum
 
    END
 
---Çalýþtýrma
 
-DECLARE @sonuc INT,@ort DECIMAL(18,2)
+DECLARE @result INT,@average DECIMAL(18,2)
 
-EXEC @sonuc=sp_ToplaVeOrtala 1,50,3,@ort OUTPUT
+EXEC @result=sp_SumandAverage 1,50,3,@average OUTPUT
 
-SELECT @sonuc AS[Sayýlarým Toplamý],@ort AS [Sayýlarýn Ortalamasý]
-
---** BÝRDEN FAZLA VERÝYÝ DIÞARI ÇIKARTMAK ÝÇÝN OUTPUT KULLANILIR. SADECE 1 RETURN YAZABÝLRÝÝM. GERÝ KALAN ÝÇÝN OUTPUT KULLANIYORUM. DECLARE ÝLE GEREKLÝ TANIMLAMALARI YAPMAM GEREKÝYOR.SON 3 SATIR  BÝRLÝKTE ÇALIÞTIRILIYOR.
+SELECT @result AS[Sum Of Numbers],@average AS [Average Of Numbers]
 
 
-
-------------****************-----------------------
-
---SP. kullanarak ürün ve kategori ekleme (eðer kategori daha önceden eklenmiþse yeniden eklemek yerine o kategorinin 
---ýd bulunarak ürün eklenmelidir.)
 
 CREATE PROCEDURE sp_UrunVeKategori
        @urunAdi NVARCHAR(40),
@@ -359,41 +305,19 @@ AS
 
 			    INSERT INTO Categories (CategoryName) VALUES (@kategoriAdi)
 			   
-			    SELECT @kategoriID=@@IDENTITY--Girilen son kaydýn ID bilgisini döndüren SQL Server'da tanýmlý olan global bir deðiþkendir.
+			    SELECT @kategoriID=@@IDENTITY
 			   END
             INSERT INTO Products (CategoryID,ProductName) VALUES (@kategoriID,@urunAdi)
 
 			SELECT @girilenUrunID=@@IDENTITY
 	   END
 
-	    --SORU: Kategori adý varsa bile ürünü Products tablosuna eklemesi için buraya neden insert into yapmýyoruz?
-
-			   --Buraya söylediðin gibi insert into yazabilirim.Fakat buraya Insert Into yazarsam else bloðu içerisinde de yine Product tablosuna Insert Into yazmam gerekecek.Kod tekrarý olmasýn diye buradan sadece id bilgisini aldým ve else bloðundanda sadece id bilgisini alarak en altta tek kodla ekleme iþlemini gerçekleþtirdim.
-
-DECLARE @id INT -- SORU:Bunu neden tanýmlamalýyýz?
-
-				--Çünkü Stored Procedure'da ki OUTPUT girilenUrunID bilgisinin sonucunu almam gerekiyor.Eklenen ürün id'yi bulabilmek için.
-
-				--OUTPUT PARAMETRE varsa bir stored procedure'da o sana sonuç dönüyordur.Onu da karþýlayabilmek için ayný tipte deðiþkenle karþýlamak gerekir.
-
---NOT:Yukarýda bulunan @id aslýndan procedure çalýþtýkdan sonran cevap dönen girilenUrunID parametresidir.
-
-EXEC sp_UrunVeKategori 'Doluca2','þaraplar2',@id OUTPUT
-
-PRINT 'Son girilen ürün no'+CAST(@id AS NVARCHAR)
-
-SELECT * FROM Products WHERE ProductID=81
-
-SELECT * FROM Categories WHERE CategoryID=13
-
---@@IDENTITY -- EN SON KAYIT NE ÝSE EN SON ONU GETÝRÝR.
---PRINT: SADECE METÝN DÖNER. BU YÜZDEN SAYI GETÝRMEK ÝSTERSEM CAST KULLANMAK ZORUNDAYIM.
 
 
 
---SP ile yeni bir bölge ekleme iþlemi yapýnýz(Eðer daha önceden ayný bölge eklemiþ ise hata mesajý fýrlatýnýz)(Region)
+--Add a new region with SP(If it has added the same region before, turnback an error message)
 
-CREATE PROCEDURE sp_BolgeEkle
+CREATE PROCEDURE sp_AddRegion
        @regionId INT,
 	   @regionDescription NCHAR(50)
 AS
@@ -403,7 +327,7 @@ AS
 	   IF EXISTS(SELECT * FROM Region WHERE RegionID=@regionId OR RegionDescription=@regionDescription)
 	       BEGIN
 
-		   PRINT 'Daha önceden böyle bir kayýt eklenmiþ!'
+		   PRINT 'Such a record has already been added!'
 
 		   END
 	   ELSE
@@ -415,185 +339,4 @@ AS
 
 	   END
 
-EXEC sp_BolgeEkle 6,'Güney'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+EXEC sp_AddRegion 6,'South'
